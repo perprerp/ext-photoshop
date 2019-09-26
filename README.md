@@ -1,2 +1,2 @@
 # ext-photoshop
-Extensions and configuration files for Photoshop
+My software extensions for Photoshop
