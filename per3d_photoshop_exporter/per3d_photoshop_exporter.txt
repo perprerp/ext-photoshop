@@ -1,0 +1,58 @@
+﻿per3d Photoshop Exporter v1.0.3                For Adobe Photoshop CC
+
+Description
+  Not tested on the most recent version of Photoshop (2019)
+  Export layer groups to maps using name tags to define save options.
+  Supports both relative, absolute and complex output path locations.
+  No GUI or per-PSD configuration necessary. Settings are never lost.
+
+Files
+  per3d_export_to_current.jsx     - Export to the PSD location.
+  per3d_export_to_parent.jsx      - Export to the parent folder.
+  per3d_export_to_subfolder.jsx*  - Export to specified sub-folder.
+  per3d_export_to_path.jsx*       - Export to specified path.
+  per3d_export_to_treesync.jsx*   - Respect folder tree. See below.
+  per3d_exporter.jsxinc           - Library of functions.
+   * = Requires editing of the jsx file.
+
+Tags
+  [JPG]     		  - Export layer as JPG file. Alpha, 16-bit not supported.
+  [PNG]     		  - Export layer as PNG file. Alpha not supported.
+  [TGA]     		  - Export layer as TGA file.  16-bit not supported.
+  [TIFF]    		  - Export layer as TIFF file.
+  [8BIT/16BIT]  	  - Force 8/16-bit output. Default output matches the PSD.
+  [16BIT]   		  - Force 16-bit output. Default output matches the PSD.
+  [nnn%]    		  - Scale output to nnn%. nnn can be 25, 50 or 200.
+  [R/G/B/A/RG/RB/GB]  - These tags grant per-channel control. See below.
+
+Usage
+  In Photoshop, tag a top-layer, visible, group with a format ("TGA")
+  From File->Scripts->Browse pick a .jsx file.
+  Action-record the previous step to allow for a keyboard shortcut.
+  After some brief flickering all groups with tags are exported.
+  Exported group layers will be expanded in the layer manager.
+  Some of the scripts require editing to specify path parameters.
+  Paths must be in URI format. "c/my_game/assets/textures".
+
+Export to Tree
+  Requires the root folder locations of source and destination.
+  Will reconstruct the relative path leading to the source file.
+  Example
+    Source root is given as "c/my_wips"
+    Destination root is given as "n/projects/our_game"
+    Artist PSD path is "c/my_wips/assets/shoes/crocks.psd"
+    Output files will be "n/projects/our_game/assets/shoes/crocks_*.*"
+
+[R/G/B/A/RG/RB/GB]
+    The following layers...
+        "diffuse [TIFF]"
+        "diffuse [A]"
+        "diffuse [G]"
+    ... combine into one output map as they're named the same (sans tags)
+    Alpha channel is sourced from the red channel. 
+
+Version History
+  1.0.3 - on Git
+  1.0.2 - Channels bugfixing and ease of use.
+  1.0.1 - File paths bugfixing and errorchecking.
+  1.0.0 - Limited non-public release.

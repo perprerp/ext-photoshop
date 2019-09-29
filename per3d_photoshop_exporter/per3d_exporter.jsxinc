@@ -1,0 +1,233 @@
+﻿//===========================================================================
+// per3d Photoshop Exporter
+// 
+//   Please see "per3d_photoshop_exporter.txt" for complete documentation.
+//
+// TODO
+//   garbage collection - release references
+//	close doc_new on error
+//   clean up use of File, Folder
+//   layersets expand on export for some reason.
+//===========================================================================
+#target photoshop;
+app.bringToFront();
+
+function PER3D_export( p_root_uri_source, p_root_uri_target)
+{
+
+	PER3D_init();
+	if( !documents.length)		return PER3D_alert ("There is no active document.");
+	var doc = app.activeDocument;
+	try { // apparently the only way to check whether the document is saved...
+		var doc_path_source = decodeURI( doc.path);    
+	} catch(e)
+	{
+		return PER3D_alert( "This document is not saved as a file." );
+	}
+	if( !doc.layerSets.length)	return PER3D_alert ("There are no layer groups in the active document.");
+
+	doc_path_source = enforce_trailing_slash (doc_path_source);
+	p_root_uri_source	= enforce_trailing_slash( p_root_uri_source);
+	p_root_uri_target	= enforce_trailing_slash( p_root_uri_target);
+
+	if( p_root_uri_source && !Folder(p_root_uri_source).exists )	return PER3D_alert( "Source path does not exist:\n" + p_root_uri_source);;
+	var doc_path_relative;
+	var doc_path_target;
+	if( p_root_uri_source)	// source path is only ever used for treesync
+	{
+		if( p_root_uri_target && !Folder( p_root_uri_target).exists)	return PER3D_alert( "Target path does not exist:\n" + p_root_uri_target);;
+		if( doc_path_source.lastIndexOf( p_root_uri_source, 0) != 0) PER3D_alert("File path:\n" + doc_path_source + "\n\n...is not located within source tree path:\n" + p_root_uri_source);
+		var doc_path_relative	= doc_path_source.slice( p_root_uri_source.length);
+		doc_path_relative		= enforce_trailing_slash( doc_path_relative);
+		doc_path_target	= p_root_uri_target + doc_path_relative;
+	} else if( p_root_uri_target)
+	{
+		if( p_root_uri_target.indexOf("/") == 0)
+		{
+			doc_path_target = p_root_uri_target;
+		}else
+		{
+			doc_path_target = (doc_path_source + p_root_uri_target);
+		}
+	} else {
+		doc_path_target = doc_path_source;
+	}
+	var save_options;
+	var save_extension;
+	var save_8BIT;
+	var save_16BIT;
+	var save_size;
+	var layerset_R;
+	var layerset_G;
+	var layerset_B;
+	var layerset_A;
+	for( var i_layer_set = 0; i_layer_set < doc.layerSets.length; i_layer_set++)
+	{
+		save_extension	= false;
+		save_8BIT		= false;
+		save_16BIT		= false;
+		save_size		= 100;
+		layerset_R		= false;
+		layerset_G		= false;
+		layerset_B		= false;
+		layerset_A		= false;
+		var layerset_current = doc.layerSets[i_layer_set];
+		var layer_name = layerset_current.name;
+		if( layerset_current.visible)
+		{
+			if( layer_name.indexOf ("[JPG]")   !== -1) { save_extension = "JPG";  save_options = new JPEGSaveOptions()  }
+			if( layer_name.indexOf ("[TGA]")   !== -1) { save_extension = "TGA";  save_options = new TargaSaveOptions() }
+			if( layer_name.indexOf ("[PNG]")   !== -1) { save_extension = "PNG";  save_options = new PNGSaveOptions()   }
+			if( layer_name.indexOf ("[TIFF]")  !== -1) { save_extension = "TIFF"; save_options = new TiffSaveOptions()  }
+			if( layer_name.indexOf ("[8BIT]")  !== -1) { save_8BIT  = true }
+			if( layer_name.indexOf ("[16BIT]") !== -1) { save_16BIT = true }
+			if( layer_name.indexOf ("[200%]")  !== -1) { save_size  = 200 }
+			if( layer_name.indexOf ("[50%]")   !== -1) { save_size  = 50 }
+			if( layer_name.indexOf ("[25%]")   !== -1) { save_size  = 25 }
+			if( save_extension )
+			{
+				var doc_new;
+				var layer_name_untagged = untag( layer_name);
+				for( var i_layer_channel = 0; i_layer_channel < doc.layerSets.length; i_layer_channel++)
+				{
+					var layer_alphasearch_name = doc.layerSets[i_layer_channel].name;
+					var layer_alphasearch_name_untagged = untag( layer_alphasearch_name);
+					if( layer_name_untagged == layer_alphasearch_name_untagged)
+					{
+						if( layer_alphasearch_name.indexOf ("[A]")   !== -1)	layerset_A = doc.layerSets[i_layer_channel];
+						//if (!save_extension)
+						{
+							if( layer_alphasearch_name.indexOf ("[R]")   !== -1)	layerset_R = doc.layerSets[i_layer_channel];
+							if( layer_alphasearch_name.indexOf ("[G]")   !== -1)	layerset_G = doc.layerSets[i_layer_channel];
+							if( layer_alphasearch_name.indexOf ("[B]")   !== -1)	layerset_B = doc.layerSets[i_layer_channel];
+							if( layer_alphasearch_name.indexOf ("[RG]")  !== -1)
+							{
+								layerset_R = doc.layerSets[i_layer_channel];
+								layerset_G = doc.layerSets[i_layer_channel];
+							}
+							if( layer_alphasearch_name.indexOf ("[RB]")  !== -1)
+							{
+								layerset_R = doc.layerSets[i_layer_channel];
+								layerset_B = doc.layerSets[i_layer_channel];
+							}
+							if( layer_alphasearch_name.indexOf ("[GB]")  !== -1)
+							{
+								layerset_G = doc.layerSets[i_layer_channel];
+								layerset_B = doc.layerSets[i_layer_channel];
+							}
+							// now avoid processing the same channel twice
+							if( layerset_current == layerset_R)	layerset_R = false;
+							if( layerset_current == layerset_G)	layerset_G = false;
+							if( layerset_current == layerset_B)	layerset_B = false;
+						}
+					}
+				}
+				var doc_new_path = decodeURI( doc_path_target);
+				doc_new_path = decodeURI( doc_new_path);
+				folder_create (doc_new_path);
+				var doc_name = doc.name.replace( /\.[^\.]+$/, '' );
+				doc_new_path += "/" + doc_name + "_" + layer_name_untagged + "." + save_extension;
+				doc_new_path = new File(doc_new_path);
+				doc_new = app.documents.add( doc.width, doc.height, doc.resolution, doc_name + "_" + layer_name_untagged + "." +save_extension);
+
+				switch( save_extension)
+				{
+					case "JPG":
+						save_options.quality = 12;
+						if (save_16BIT) PER3D_alert( "16-bits per channel not supported for extension " + save_extension + ".\nSaving as 8-bit.");
+						break;
+					case "PNG":
+						save_options.compression = 0;
+						if (save_16BIT) doc_new.bitsPerChannel = BitsPerChannelType.SIXTEEN;
+						break;
+					case "TGA":
+						save_options.resolution = (layerset_A ? TargaBitsPerPixels.THIRTYTWO:TargaBitsPerPixels.TWENTYFOUR);
+						save_options.alphaChannels = (layerset_A ? true : false);
+						if (save_16BIT) PER3D_alert( "16-bits per channel not supported for extension " + save_extension + ".\nSaving as 8-bit.");
+						break;
+					case "TIFF":
+						save_options.alphaChannels = (layerset_A ? true : false);
+						save_options.interleaveChannels = false;
+						save_options.layers = false;
+						if (save_16BIT) doc_new.bitsPerChannel = BitsPerChannelType.SIXTEEN;
+						break;
+				}
+				if (save_8BIT)  doc_new.bitsPerChannel = BitsPerChannelType.EIGHT;
+				app.activeDocument = doc;
+				layerset_current.duplicate( doc_new, ElementPlacement.PLACEATBEGINNING);
+				app.activeDocument = doc_new;
+				doc_new.flatten();
+
+				if( layerset_A)	export_channel( doc, doc_new, layerset_A, 0, 3);
+				if( layerset_R)	export_channel( doc, doc_new, layerset_R, 0, 0 );
+				if( layerset_G)	export_channel( doc, doc_new, layerset_G, 1, 1 );
+				if( layerset_B)	export_channel( doc, doc_new, layerset_B, 2, 2 );
+
+				var rulerUnits_bak = app.preferences.rulerUnits;
+				app.preferences.rulerUnits = Units.PERCENT;
+				activeDocument.resizeImage (save_size, undefined, undefined, ResampleMethod.BICUBIC);
+				app.preferences.rulerUnits = rulerUnits_bak;
+				doc_new.saveAs( doc_new_path, save_options, true, Extension.LOWERCASE)
+				app.activeDocument = doc;
+				doc_new.close( SaveOptions.DONOTSAVECHANGES);
+			}
+		}
+	}
+}
+function PER3D_alert (p_message)
+{
+	alert ("per3d_exporter:\n\n" + p_message);
+//	doc_new.close( SaveOptions.DONOTSAVECHANGES);
+	return false;
+}
+
+function export_channel( p_doc, p_doc_new, p_layerset, p_channel_from, p_channel_to )
+{
+	app.activeDocument = p_doc;
+	p_layerset.duplicate( p_doc_new, ElementPlacement.PLACEATEND);
+	app.activeDocument = p_doc_new;
+	p_doc_new.activeChannels = [p_doc_new.channels[ p_channel_from]];
+	p_doc_new.selection.selectAll();
+	p_doc_new.selection.copy(true);
+	p_doc_new.activeLayer.remove();
+	if (p_doc_new.channels.length <= p_channel_to)	p_doc_new.channels.add();	// No need for a loop. Only happens for alpha
+	app.activeDocument.activeChannels = [ p_doc_new.channels[ p_channel_to]];
+	p_doc_new.paste();
+	p_doc_new.selection.deselect();
+	p_doc_new.activeChannels = p_doc_new.componentChannels;
+}
+function untag( p_layer_name)
+{
+	return(( p_layer_name.replace(/ *\[[^\]]*]/g, '')).trim());
+}
+function enforce_trailing_slash (p_path)
+{
+	if( !p_path) return p_path;
+	if( typeof p_path != 'string')
+	{
+		PER3D_alert ("enforce_trailing_slash: expecting a string parameter.")
+		return p_path;
+	}
+	if( p_path.substr( -1) != '/')	p_path += '/';
+	return p_path;
+}
+function folder_create (p_path)
+{
+	if( p_path.exists) return true;
+	var path_new = new Folder (p_path);
+	if (!path_new.create())
+	{
+		PER3D_alert( "Path not found and could not be created:.\n" + p_path);
+		return false;
+	}
+}
+function PER3D_init()
+{
+	if( !String.prototype.trim )
+	{  
+		String.prototype.trim = function ()
+		{
+			return this.replace(/^\s+|\s+$/g,'');	// Trim leading and trailing whitespace
+		};  
+	}
+}
