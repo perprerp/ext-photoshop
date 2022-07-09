@@ -1,7 +1,7 @@
 ﻿//===========================================================================
-// per3d Photoshop Exporter
+// Photoshop Exporter - by perprerp
 // 
-//   Please see "per3d_photoshop_exporter.txt" for complete documentation.
+//   Please see "per_photoshop_exporter.txt" for complete documentation.
 //
 // TODO
 //   garbage collection - release references
@@ -12,31 +12,31 @@
 #target photoshop;
 app.bringToFront();
 
-function PER3D_export( p_root_uri_source, p_root_uri_target)
+function PER_export( p_root_uri_source, p_root_uri_target)
 {
 
-	PER3D_init();
-	if( !documents.length)		return PER3D_alert ("There is no active document.");
+	PER_init();
+	if( !documents.length)		return PER_alert ("There is no active document.");
 	var doc = app.activeDocument;
 	try { // apparently the only way to check whether the document is saved...
 		var doc_path_source = decodeURI( doc.path);    
 	} catch(e)
 	{
-		return PER3D_alert( "This document is not saved as a file." );
+		return PER_alert( "This document is not saved as a file." );
 	}
-	if( !doc.layerSets.length)	return PER3D_alert ("There are no layer groups in the active document.");
+	if( !doc.layerSets.length)	return PER_alert ("There are no layer groups in the active document.");
 
 	doc_path_source = enforce_trailing_slash (doc_path_source);
 	p_root_uri_source	= enforce_trailing_slash( p_root_uri_source);
 	p_root_uri_target	= enforce_trailing_slash( p_root_uri_target);
 
-	if( p_root_uri_source && !Folder(p_root_uri_source).exists )	return PER3D_alert( "Source path does not exist:\n" + p_root_uri_source);;
+	if( p_root_uri_source && !Folder(p_root_uri_source).exists )	return PER_alert( "Source path does not exist:\n" + p_root_uri_source);;
 	var doc_path_relative;
 	var doc_path_target;
 	if( p_root_uri_source)	// source path is only ever used for treesync
 	{
-		if( p_root_uri_target && !Folder( p_root_uri_target).exists)	return PER3D_alert( "Target path does not exist:\n" + p_root_uri_target);;
-		if( doc_path_source.lastIndexOf( p_root_uri_source, 0) != 0) PER3D_alert("File path:\n" + doc_path_source + "\n\n...is not located within source tree path:\n" + p_root_uri_source);
+		if( p_root_uri_target && !Folder( p_root_uri_target).exists)	return PER_alert( "Target path does not exist:\n" + p_root_uri_target);;
+		if( doc_path_source.lastIndexOf( p_root_uri_source, 0) != 0) PER_alert("File path:\n" + doc_path_source + "\n\n...is not located within source tree path:\n" + p_root_uri_source);
 		var doc_path_relative	= doc_path_source.slice( p_root_uri_source.length);
 		doc_path_relative		= enforce_trailing_slash( doc_path_relative);
 		doc_path_target	= p_root_uri_target + doc_path_relative;
@@ -134,7 +134,7 @@ function PER3D_export( p_root_uri_source, p_root_uri_target)
 				{
 					case "JPG":
 						save_options.quality = 12;
-						if (save_16BIT) PER3D_alert( "16-bits per channel not supported for extension " + save_extension + ".\nSaving as 8-bit.");
+						if (save_16BIT) PER_alert( "16-bits per channel not supported for extension " + save_extension + ".\nSaving as 8-bit.");
 						break;
 					case "PNG":
 						save_options.compression = 0;
@@ -143,7 +143,7 @@ function PER3D_export( p_root_uri_source, p_root_uri_target)
 					case "TGA":
 						save_options.resolution = (layerset_A ? TargaBitsPerPixels.THIRTYTWO:TargaBitsPerPixels.TWENTYFOUR);
 						save_options.alphaChannels = (layerset_A ? true : false);
-						if (save_16BIT) PER3D_alert( "16-bits per channel not supported for extension " + save_extension + ".\nSaving as 8-bit.");
+						if (save_16BIT) PER_alert( "16-bits per channel not supported for extension " + save_extension + ".\nSaving as 8-bit.");
 						break;
 					case "TIFF":
 						save_options.alphaChannels = (layerset_A ? true : false);
@@ -174,9 +174,9 @@ function PER3D_export( p_root_uri_source, p_root_uri_target)
 		}
 	}
 }
-function PER3D_alert (p_message)
+function PER_alert (p_message)
 {
-	alert ("per3d_exporter:\n\n" + p_message);
+	alert ("per_exporter:\n\n" + p_message);
 //	doc_new.close( SaveOptions.DONOTSAVECHANGES);
 	return false;
 }
@@ -205,7 +205,7 @@ function enforce_trailing_slash (p_path)
 	if( !p_path) return p_path;
 	if( typeof p_path != 'string')
 	{
-		PER3D_alert ("enforce_trailing_slash: expecting a string parameter.")
+		PER_alert ("enforce_trailing_slash: expecting a string parameter.")
 		return p_path;
 	}
 	if( p_path.substr( -1) != '/')	p_path += '/';
@@ -217,11 +217,11 @@ function folder_create (p_path)
 	var path_new = new Folder (p_path);
 	if (!path_new.create())
 	{
-		PER3D_alert( "Path not found and could not be created:.\n" + p_path);
+		PER_alert( "Path not found and could not be created:.\n" + p_path);
 		return false;
 	}
 }
-function PER3D_init()
+function PER_init()
 {
 	if( !String.prototype.trim )
 	{  
