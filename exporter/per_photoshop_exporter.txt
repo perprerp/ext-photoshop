@@ -1,4 +1,5 @@
-﻿per3d Photoshop Exporter v1.0.3                For Adobe Photoshop CC
+Photoshop Exporter v1.0.3                For Adobe Photoshop CC
+by perprerp
 
 Description
   Not tested on the most recent version of Photoshop (2019)
@@ -7,12 +8,12 @@ Description
   No GUI or per-PSD configuration necessary. Settings are never lost.
 
 Files
-  per3d_export_to_current.jsx     - Export to the PSD location.
-  per3d_export_to_parent.jsx      - Export to the parent folder.
-  per3d_export_to_subfolder.jsx*  - Export to specified sub-folder.
-  per3d_export_to_path.jsx*       - Export to specified path.
-  per3d_export_to_treesync.jsx*   - Respect folder tree. See below.
-  per3d_exporter.jsxinc           - Library of functions.
+  per_export_to_current.jsx     - Export to the PSD location.
+  per_export_to_parent.jsx      - Export to the parent folder.
+  per_export_to_subfolder.jsx*  - Export to specified sub-folder.
+  per_export_to_path.jsx*       - Export to specified path.
+  per_export_to_treesync.jsx*   - Respect folder tree. See below.
+  per_exporter.jsxinc           - Library of functions.
    * = Requires editing of the jsx file.
 
 Tags
