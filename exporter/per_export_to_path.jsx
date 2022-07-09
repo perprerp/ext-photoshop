@@ -1,9 +1,9 @@
-﻿#include per3d_exporter.jsxinc
+﻿#include per_exporter.jsxinc
 
 //===========================================================================
-// per3d Photoshop Exporter
+// Photoshop Exporter - by perprerp
 // 
 //   Please see "per3d_photoshop_exporter.txt" for complete documentation.
 //===========================================================================
 
-PER3D_export ( null, "/c/mygame/assets/shoes");
+PER_export ( null, "/c/mygame/assets/shoes");
